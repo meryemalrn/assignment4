@@ -1,9 +1,7 @@
-# Destructuring Field Guide
-
 Name: Meryem Betül Abdulrahman
 Student number: 2300009906
 
-Bonuses claimed: **Bonus 1: LaTeX** (`latex/guide.pdf`), **Bonus 2: Depth** (`js/depth.mjs`, `ts/depth.ts`), **Bonus 3: Real code**. Each one has its own section near the end.
+Bonuses claimed: **Bonus 1: LaTeX** (`latex/guide.pdf`), **Bonus 2: Depth** (`js/depth.mjs`, `ts/depth.ts`), **Bonus 3: Real code**, **Bonus 4: Git repository**. Each one has its own section near the end.
 
 ## Contents
 
@@ -17,6 +15,7 @@ Bonuses claimed: **Bonus 1: LaTeX** (`latex/guide.pdf`), **Bonus 2: Depth** (`js
 - [Bonus 1: LaTeX](#bonus-1-latex)
 - [Bonus 2: Depth](#bonus-2-depth)
 - [Bonus 3: Real code](#bonus-3-real-code)
+- [Bonus 4: Git repository](#bonus-4-git-repository)
 - [Logs](#logs)
 
 ## Run
@@ -41,6 +40,7 @@ Every output in this guide is copied from `output.txt`, which is the real output
 | `ts/types.ts` | topics T1 to T5 |
 | `js/props.jsx`, `ts/props.tsx` | props and children, P1 to P7 |
 | `js/depth.mjs`, `ts/depth.ts` | Bonus 2 (added to the `js` and `ts` scripts in `package.json`) |
+| `latex/md2tex.mjs`, `latex/guide.tex`, `latex/guide.pdf` | Bonus 1 |
 
 ## The idea in one minute
 
@@ -1222,6 +1222,8 @@ makes you deal with every `undefined` that JavaScript would have passed along si
 
 ## Bonus 1: LaTeX
 
+Bonus 1: LaTeX
+
 The whole field guide is also a LaTeX document: `latex/guide.tex` (the source) and
 `latex/guide.pdf` (the PDF). It is the guide itself, not a shorter copy: every entry, the pitfalls,
 T1 to T5, props and children, the table, the bonus sections and the log.
@@ -1243,7 +1245,8 @@ xelatex guide.tex        # second run puts page numbers into the contents
 ```
 
 `latexmk -xelatex guide.tex` does both runs in one command. Without a local TeX installation:
-upload `guide.tex` to Overleaf and choose **Menu > Compiler > XeLaTeX**.
+upload `guide.tex` to Overleaf, open **Settings** (the gear icon) and choose **Compiler: XeLaTeX** and
+**Main document: guide.tex**.
 
 **Why XeLaTeX and not pdfLaTeX:** the guide contains UTF-8 characters (Turkish letters, the emoji in
 D1). pdfLaTeX with `listings` cannot read multi-byte characters inside code; XeLaTeX reads UTF-8
@@ -1255,6 +1258,205 @@ lines wrap with a small arrow, table column widths follow the amount of text in 
 build log has no overfull boxes (`grep -c Overfull guide.log` prints `0`).
 
 ## Bonus 2: Depth
+
+Code: `js/depth.mjs` (D1, D2, D3, D5) and `ts/depth.ts` (D4). Both are part of `npm run all`.
+
+### D1: what does an array pattern really call?
+
+I wrote an iterable that logs every call, and destructured it.
+
+```js
+const [s1, s2] = spy(['a', 'b', 'c', 'd'])
+const [r1, ...rMore] = spy(['a', 'b'])
+```
+
+```text
+D1 two variables from four values:
+D1   [Symbol.iterator]() called
+D1   next() -> {"value":"a","done":false}
+D1   next() -> {"value":"b","done":false}
+D1   return() called: the pattern stopped early
+D1 result: a b
+D1 with rest (runs to the end, no return()):
+D1   [Symbol.iterator]() called
+D1   next() -> {"value":"a","done":false}
+D1   next() -> {"value":"b","done":false}
+D1   next() -> {"done":true}
+D1 result: a [ 'b' ]
+```
+
+An array pattern does **not** use indexes. It calls `value[Symbol.iterator]()` once and then
+`next()` once per variable; it never looks at `length`. With two variables it asked for exactly two
+values and never touched `'c'` and `'d'`. What surprised me is the `return()` call: when the pattern
+stops before the iterator is finished, it tells the iterator to clean up (the specification calls
+this IteratorClose). With a rest element the iterator runs to `done: true`, so there is no `return()`.
+
+Consequences, all from real output:
+
+```text
+D1 string: M r [ 'i', '!' ]
+D1 emoji: 👍 o | by index: false
+D1 Set: x y
+D1 Map: TR Ankara
+D1 infinite generator: 1 2 3
+D1 array-like: TypeError: {(intermediate value)(intermediate value)} is not iterable
+D1 object pattern on a string: 5 I r
+D1 object pattern on an array: b 3
+D1 object pattern on a number: function undefined
+```
+
+- Anything iterable works: strings, `Set`, `Map`, generators. An **infinite** generator is safe,
+  because the pattern only asks three times (a rest element there would never finish).
+- A string is iterated by code point, so `'👍ok'` gives the whole emoji, while `'👍ok'[0]` is half of it.
+- An "array-like" object with `0` and `length` is **not** enough: no `Symbol.iterator`, so `TypeError`.
+  This is also why `const [k, v] of stock` fails for a plain object (form 12).
+- An **object** pattern needs only property access, so it works on arrays (`{ 1: middle }`), strings
+  (`{ length }`) and even numbers (wrapped in a `Number` object). That is why pitfall 1 has two
+  different messages: `Cannot destructure property` for objects, `is not iterable` for arrays.
+
+### D2: the order of evaluation
+
+```js
+const { a = expensive('a'), b = expensive('b') } = { a: 'given' }
+const { width = 10, height = width * 2, area = width * height } = { width: 3 }
+const { first = second, second = 1 } = {}
+const { [key('p')]: p = dflt('p'), [key('q')]: q = dflt('q') } = source // getters that log
+function addTag(tag, { tags = [] } = {}) { tags.push(tag); return tags }
+;[i, j] = [j, i + j]
+```
+
+```text
+D2   default for b computed
+D2 lazy: given B calls = 1
+D2 earlier variable: 3 6 18
+D2 later variable: ReferenceError: Cannot access 'second' before initialization
+D2 order: key p > read p > default p > key q > read q | values 0 1
+D2 fresh default per call: [ 'x' ] [ 'y' ]
+D2 right side first: 2 3
+```
+
+- **Defaults are lazy.** `expensive('a')` never ran because `a` was given. A default is an
+  expression that is evaluated only when the value is `undefined`, so a function call with a side
+  effect there happens sometimes and not other times; I would keep side effects out of defaults.
+- **A default can use an earlier variable** of the same pattern (`height = width * 2`), because the
+  pattern is processed left to right and each variable is initialised before the next one starts.
+- **It cannot use a later one**: `second` is declared but not yet initialised (temporal dead zone),
+  which gives a `ReferenceError`, not `undefined`.
+- **The exact order** per property is: compute the key, read the property, then (only if needed)
+  compute the default; then the next property. The log line shows it, and shows no `default q`.
+- **In a parameter list the default is evaluated on every call**, so `tags = []` is a new array each
+  time. (In Python a default list is created once and shared; here it is not.)
+- **The right side is finished first**: `[i, j] = [j, i + j]` used the old `i` and `j` for both
+  items, which is why the swap of form 3 needs no temporary variable.
+
+### D3: destructuring in other places
+
+```js
+try { JSON.parse('{ not json') } catch ({ name, message }) { ... }
+
+;[robot.x, robot.y, grid[2]] = [5, 7, 9]
+;({ speed: robot.speed = 1, name: robot['label'] } = { name: 'AutoTrack' })
+
+for (const [letter, number] of pairs) ...
+for (const index in pairs) ...
+for (const [c0, c1] in { ab: 1, xy: 2 }) ...
+
+const { readFileSync, existsSync: exists } = await import('node:fs')
+```
+
+```text
+D3 catch: SyntaxError - Expected property name or '}' in JSON at position 2 (line 1 column 3)
+D3 assignment targets: { x: 5, y: 7, speed: 1, label: 'AutoTrack' } [ 0, 0, 9 ]
+D3 for...of: a 1
+D3 for...of: b 2
+D3 for...in: 0 string
+D3 for...in: 1 string
+D3 for...in with a pattern: a b
+D3 for...in with a pattern: x y
+D3 dynamic import: function true
+```
+
+- **`catch ({ name, message })`**: the catch parameter is a binding like any other, so it takes a
+  pattern. It is short, but you lose the error object itself (no `stack`, cannot rethrow it), and if
+  somebody throws `null` the pattern throws a new error inside the catch.
+- **Assignment targets**: in the assignment form (no `const`), each target can be anything you can
+  assign to: `robot.x`, `grid[2]`, `robot['label']`. Here the rename syntax `name: robot['label']`
+  finally reads naturally: "take `name`, put it in `robot.label`".
+- **`for...in` against `for...of`**: `for...of` gives the values, so a pattern takes them apart.
+  `for...in` gives the keys as strings. A pattern in `for...in` is legal but destructures the **key
+  string** character by character (`ab` gives `a b`), which is never what you want.
+- **`import { a as b }` is not destructuring**, although it looks like it: the rename word is `as`
+  (not `:`), there are no defaults and no nesting, and the imported name is a live binding to the
+  module's variable, not a copy. `export const { a, b } = obj` on the other hand is real
+  destructuring inside a declaration, and so is taking names from `await import(...)`, where the
+  module arrives as an ordinary object (last output line).
+
+### D4: destructuring at the type level
+
+```ts
+type First<T extends readonly unknown[]> = T extends readonly [infer Head, ...unknown[]] ? Head : never
+type Rest<T extends readonly unknown[]> = T extends readonly [unknown, ...infer Tail] ? Tail : []
+type Last<T extends readonly unknown[]> = T extends readonly [...unknown[], infer End] ? End : never
+type Unwrap<T> = T extends { data: infer D } ? D : never
+
+type Row = [id: number, name: string, active: boolean]
+const [head, ...tail] = row // head: First<Row>, tail: Rest<Row>
+
+type Args = Parameters<typeof createTask>
+type TaskOptions = First<Args>
+const [{ title }, urgent = false] = args
+```
+
+```text
+D4 First/Rest/Last checks: [ true, true, true, true ]
+D4 value twin: 1 [ 'Deniz', true ]
+D4 Unwrap: 1 1
+D4 Parameters: Write the guide true { title: 'Write the guide', status: 'todo', urgent: true }
+D4 omit: { id: 1, name: 'Deniz' } [ 'id', 'name' ]
+```
+
+`infer` is destructuring for types. `T extends [infer Head, ...unknown[]]` is a pattern with the
+shape of the type, and `infer Head` is the "variable" that receives the part at that position:
+form 1 for `First`, form 2 for `Rest`, form 5 for `Unwrap`. The difference from values is that a
+type pattern can **fail to match**, so it needs the `? ... : never` branch (`First<[]>` is `never`).
+The `checks` array is a compile-time test: the `Equal` type only yields `true` when two types are
+identical, so the file would not compile if `First<Row>` were not `number`. `Last` has no value
+twin: a value pattern cannot put rest first (`[...init, last]` is a syntax error), but a type can.
+`Parameters<F>` is the built-in `infer` for a function's parameter list, and it is how
+`ComponentProps<typeof Alert>` in P7 works: it infers the type of the first parameter of the component.
+
+### D5: when destructuring makes code worse
+
+```js
+// Worse
+const { data: { user: { profile: { contact: { emails: [{ address: addr, primary: isMain }] } } } }, meta: { page: { total: t } } } = response
+
+// Better
+const contact = response.data.user.profile.contact
+const [primaryEmail] = contact.emails
+const totalPages = response.meta?.page?.total ?? 0
+```
+
+```text
+D5 deep pattern: mri@example.com true 12
+D5 refactored: mri@example.com true 12
+D5 deep pattern on a missing level: Cannot read properties of undefined (reading 'theme')
+D5 optional chaining instead: default
+```
+
+Both versions give the same values. The deep pattern is worse for three reasons. First, you have to
+read it from the inside out to find which names are variables (`addr`, `isMain`, `t`) and which are
+only paths (the other eight names). Second, the renames are short because the line is already too
+long, so the names got worse. Third, it is fragile: one missing level throws, and a pattern has no
+`?.`; the only tool is `= {}` at every level, which makes it longer still. The refactoring uses a
+pattern only where it helps (`[primaryEmail]`), gives the intermediate object a name, and uses
+optional chaining for the part that may be missing. My rule after this: one level is good, two is
+acceptable, and more than one rename in a pattern is a sign to use plain assignments.
+
+On performance: an object pattern is the same property reads as the plain assignments. An array
+pattern goes through the iterator protocol (D1), which is more work than `list[0]` and `list[1]`;
+engines optimise the common case of a real array, so I would only think about it in a very hot loop,
+and I did not measure a difference worth reporting.
 
 ## Bonus 3: Real code
 
@@ -1596,567 +1798,13 @@ shape. The type now lists only what the component really uses, so passing `id` i
 of being silently ignored. If the `<div>` attributes are wanted, the other fix is to keep the type
 and add `...rest` to the pattern and `{...rest}` to the outer `<div>`.
 
+## Bonus 4: Git repository
 
-Code: `js/depth.mjs` (D1, D2, D3, D5) and `ts/depth.ts` (D4). Both are part of `npm run all`.
+Bonus 4: Git repository, https://github.com/KULLANICI-ADIN/assignment4
 
-### D1: what does an array pattern really call?
-
-I wrote an iterable that logs every call, and destructured it.
-
-```js
-const [s1, s2] = spy(['a', 'b', 'c', 'd'])
-const [r1, ...rMore] = spy(['a', 'b'])
-```
-
-```text
-D1 two variables from four values:
-D1   [Symbol.iterator]() called
-D1   next() -> {"value":"a","done":false}
-D1   next() -> {"value":"b","done":false}
-D1   return() called: the pattern stopped early
-D1 result: a b
-D1 with rest (runs to the end, no return()):
-D1   [Symbol.iterator]() called
-D1   next() -> {"value":"a","done":false}
-D1   next() -> {"value":"b","done":false}
-D1   next() -> {"done":true}
-D1 result: a [ 'b' ]
-```
-
-An array pattern does **not** use indexes. It calls `value[Symbol.iterator]()` once and then
-`next()` once per variable; it never looks at `length`. With two variables it asked for exactly two
-values and never touched `'c'` and `'d'`. What surprised me is the `return()` call: when the pattern
-stops before the iterator is finished, it tells the iterator to clean up (the specification calls
-this IteratorClose). With a rest element the iterator runs to `done: true`, so there is no `return()`.
-
-Consequences, all from real output:
-
-```text
-D1 string: M r [ 'i', '!' ]
-D1 emoji: 👍 o | by index: false
-D1 Set: x y
-D1 Map: TR Ankara
-D1 infinite generator: 1 2 3
-D1 array-like: TypeError: {(intermediate value)(intermediate value)} is not iterable
-D1 object pattern on a string: 5 I r
-D1 object pattern on an array: b 3
-D1 object pattern on a number: function undefined
-```
-
-- Anything iterable works: strings, `Set`, `Map`, generators. An **infinite** generator is safe,
-  because the pattern only asks three times (a rest element there would never finish).
-- A string is iterated by code point, so `'👍ok'` gives the whole emoji, while `'👍ok'[0]` is half of it.
-- An "array-like" object with `0` and `length` is **not** enough: no `Symbol.iterator`, so `TypeError`.
-  This is also why `const [k, v] of stock` fails for a plain object (form 12).
-- An **object** pattern needs only property access, so it works on arrays (`{ 1: middle }`), strings
-  (`{ length }`) and even numbers (wrapped in a `Number` object). That is why pitfall 1 has two
-  different messages: `Cannot destructure property` for objects, `is not iterable` for arrays.
-
-### D2: the order of evaluation
-
-```js
-const { a = expensive('a'), b = expensive('b') } = { a: 'given' }
-const { width = 10, height = width * 2, area = width * height } = { width: 3 }
-const { first = second, second = 1 } = {}
-const { [key('p')]: p = dflt('p'), [key('q')]: q = dflt('q') } = source // getters that log
-function addTag(tag, { tags = [] } = {}) { tags.push(tag); return tags }
-;[i, j] = [j, i + j]
-```
-
-```text
-D2   default for b computed
-D2 lazy: given B calls = 1
-D2 earlier variable: 3 6 18
-D2 later variable: ReferenceError: Cannot access 'second' before initialization
-D2 order: key p > read p > default p > key q > read q | values 0 1
-D2 fresh default per call: [ 'x' ] [ 'y' ]
-D2 right side first: 2 3
-```
-
-- **Defaults are lazy.** `expensive('a')` never ran because `a` was given. A default is an
-  expression that is evaluated only when the value is `undefined`, so a function call with a side
-  effect there happens sometimes and not other times; I would keep side effects out of defaults.
-- **A default can use an earlier variable** of the same pattern (`height = width * 2`), because the
-  pattern is processed left to right and each variable is initialised before the next one starts.
-- **It cannot use a later one**: `second` is declared but not yet initialised (temporal dead zone),
-  which gives a `ReferenceError`, not `undefined`.
-- **The exact order** per property is: compute the key, read the property, then (only if needed)
-  compute the default; then the next property. The log line shows it, and shows no `default q`.
-- **In a parameter list the default is evaluated on every call**, so `tags = []` is a new array each
-  time. (In Python a default list is created once and shared; here it is not.)
-- **The right side is finished first**: `[i, j] = [j, i + j]` used the old `i` and `j` for both
-  items, which is why the swap of form 3 needs no temporary variable.
-
-### D3: destructuring in other places
-
-```js
-try { JSON.parse('{ not json') } catch ({ name, message }) { ... }
-
-;[robot.x, robot.y, grid[2]] = [5, 7, 9]
-;({ speed: robot.speed = 1, name: robot['label'] } = { name: 'AutoTrack' })
-
-for (const [letter, number] of pairs) ...
-for (const index in pairs) ...
-for (const [c0, c1] in { ab: 1, xy: 2 }) ...
-
-const { readFileSync, existsSync: exists } = await import('node:fs')
-```
-
-```text
-D3 catch: SyntaxError - Expected property name or '}' in JSON at position 2 (line 1 column 3)
-D3 assignment targets: { x: 5, y: 7, speed: 1, label: 'AutoTrack' } [ 0, 0, 9 ]
-D3 for...of: a 1
-D3 for...of: b 2
-D3 for...in: 0 string
-D3 for...in: 1 string
-D3 for...in with a pattern: a b
-D3 for...in with a pattern: x y
-D3 dynamic import: function true
-```
-
-- **`catch ({ name, message })`**: the catch parameter is a binding like any other, so it takes a
-  pattern. It is short, but you lose the error object itself (no `stack`, cannot rethrow it), and if
-  somebody throws `null` the pattern throws a new error inside the catch.
-- **Assignment targets**: in the assignment form (no `const`), each target can be anything you can
-  assign to: `robot.x`, `grid[2]`, `robot['label']`. Here the rename syntax `name: robot['label']`
-  finally reads naturally: "take `name`, put it in `robot.label`".
-- **`for...in` against `for...of`**: `for...of` gives the values, so a pattern takes them apart.
-  `for...in` gives the keys as strings. A pattern in `for...in` is legal but destructures the **key
-  string** character by character (`ab` gives `a b`), which is never what you want.
-- **`import { a as b }` is not destructuring**, although it looks like it: the rename word is `as`
-  (not `:`), there are no defaults and no nesting, and the imported name is a live binding to the
-  module's variable, not a copy. `export const { a, b } = obj` on the other hand is real
-  destructuring inside a declaration, and so is taking names from `await import(...)`, where the
-  module arrives as an ordinary object (last output line).
-
-### D4: destructuring at the type level
-
-```ts
-type First<T extends readonly unknown[]> = T extends readonly [infer Head, ...unknown[]] ? Head : never
-type Rest<T extends readonly unknown[]> = T extends readonly [unknown, ...infer Tail] ? Tail : []
-type Last<T extends readonly unknown[]> = T extends readonly [...unknown[], infer End] ? End : never
-type Unwrap<T> = T extends { data: infer D } ? D : never
-
-type Row = [id: number, name: string, active: boolean]
-const [head, ...tail] = row // head: First<Row>, tail: Rest<Row>
-
-type Args = Parameters<typeof createTask>
-type TaskOptions = First<Args>
-const [{ title }, urgent = false] = args
-```
-
-```text
-D4 First/Rest/Last checks: [ true, true, true, true ]
-D4 value twin: 1 [ 'Deniz', true ]
-D4 Unwrap: 1 1
-D4 Parameters: Write the guide true { title: 'Write the guide', status: 'todo', urgent: true }
-D4 omit: { id: 1, name: 'Deniz' } [ 'id', 'name' ]
-```
-
-`infer` is destructuring for types. `T extends [infer Head, ...unknown[]]` is a pattern with the
-shape of the type, and `infer Head` is the "variable" that receives the part at that position:
-form 1 for `First`, form 2 for `Rest`, form 5 for `Unwrap`. The difference from values is that a
-type pattern can **fail to match**, so it needs the `? ... : never` branch (`First<[]>` is `never`).
-The `checks` array is a compile-time test: the `Equal` type only yields `true` when two types are
-identical, so the file would not compile if `First<Row>` were not `number`. `Last` has no value
-twin: a value pattern cannot put rest first (`[...init, last]` is a syntax error), but a type can.
-`Parameters<F>` is the built-in `infer` for a function's parameter list, and it is how
-`ComponentProps<typeof Alert>` in P7 works: it infers the type of the first parameter of the component.
-
-### D5: when destructuring makes code worse
-
-```js
-// Worse
-const { data: { user: { profile: { contact: { emails: [{ address: addr, primary: isMain }] } } } }, meta: { page: { total: t } } } = response
-
-// Better
-const contact = response.data.user.profile.contact
-const [primaryEmail] = contact.emails
-const totalPages = response.meta?.page?.total ?? 0
-```
-
-```text
-D5 deep pattern: mri@example.com true 12
-D5 refactored: mri@example.com true 12
-D5 deep pattern on a missing level: Cannot read properties of undefined (reading 'theme')
-D5 optional chaining instead: default
-```
-
-Both versions give the same values. The deep pattern is worse for three reasons. First, you have to
-read it from the inside out to find which names are variables (`addr`, `isMain`, `t`) and which are
-only paths (the other eight names). Second, the renames are short because the line is already too
-long, so the names got worse. Third, it is fragile: one missing level throws, and a pattern has no
-`?.`; the only tool is `= {}` at every level, which makes it longer still. The refactoring uses a
-pattern only where it helps (`[primaryEmail]`), gives the intermediate object a name, and uses
-optional chaining for the part that may be missing. My rule after this: one level is good, two is
-acceptable, and more than one rename in a pattern is a sign to use plain assignments.
-
-On performance: an object pattern is the same property reads as the plain assignments. An array
-pattern goes through the iterator protocol (D1), which is more work than `list[0]` and `list[1]`;
-engines optimise the common case of a real array, so I would only think about it in a very hot loop,
-and I did not measure a difference worth reporting.
-
-
-
-Bonus 3: Real code
-
-Destructuring in code that somebody else wrote, from three sources:
-
-- the **Task Manager starter** from Assignment 3 (`starter/src/`)
-- two **libraries in this project's `node_modules`**: React 19.3.1 and TypeScript 5.8.3. These are
-  the versions pinned in `package-lock.json`, so the line numbers are the same after `npm install`.
-- the open-source project **[shadcn/ui](https://github.com/shadcn-ui/ui)**, commit `45bbf9b`
-  (20 November 2026), folder `apps/v4/registry/new-york-v4/ui/`
-
-| # | File and line | Forms | My verdict |
-|---|---|---|---|
-| 1 | Task Manager `src/App.tsx:37` | 1 | good, the reason hooks return arrays |
-| 2 | Task Manager `src/TaskRow.tsx:5` | 11 + 5 | good, **React props case** |
-| 3 | Task Manager `src/App.tsx:8` and `:21` | 11 + 5 | fine, the type is written inline |
-| 4 | shadcn/ui `button.tsx:40-58` | 11 + 7 + 8, spread | good, a textbook rest/spread component |
-| 5 | shadcn/ui `dialog.tsx:50-69`, `card.tsx:4` | 11 + 8 | good, **children taken out or passed through** |
-| 6 | React `cjs/react-jsx-runtime.development.js:249-251` | 8, written out | the reason `key` is not a prop |
-| 7 | TypeScript `lib/_tsc.js:2768` | 5 | good |
-| 8 | shadcn/ui `chart.tsx:118-145` | 11 + 7 | **worse**, and it drops props silently |
-
-### Case 1: `useReducer` in the Task Manager (form 1)
-
-`starter/src/App.tsx`, line 37:
-
-```tsx
-const [tasks, dispatch] = useReducer(taskReducer, [])
-```
-
-**Form 1.** Without destructuring:
-
-```tsx
-const reducerResult = useReducer(taskReducer, [])
-const tasks = reducerResult[0]
-const dispatch = reducerResult[1]
-```
-
-`useReducer` returns a pair, and the caller picks the names. That is why React returns an array here
-and not an object: a second reducer in the same component would be
-`const [filter, dispatchFilter] = useReducer(...)`, with no clash. With an object it would need two
-renames (form 6), `{ state: filter, dispatch: dispatchFilter }`. `@types/react` types the result as a
-tuple, so `tasks` is not `Task[] | undefined` even with `noUncheckedIndexedAccess` on (T3).
-
-### Case 2: `TaskRow` props in the Task Manager (forms 11 and 5, React props)
-
-`starter/src/TaskRow.tsx`, lines 3 and 5:
-
-```tsx
-type TaskRowProps = { task: Task; onNext: () => void; onDelete: () => void }
-
-export default function TaskRow({ task, onNext, onDelete }: TaskRowProps) {
-```
-
-**Form 11 with a form 5 pattern**, and the type after the whole pattern (T1). Without destructuring:
-
-```tsx
-export default function TaskRow(props: TaskRowProps) {
-  const task = props.task
-  const onNext = props.onNext
-  const onDelete = props.onDelete
-```
-
-**What is a prop and what is children here.** The call site is `src/App.tsx`, lines 25 to 30:
-
-```tsx
-<TaskRow
-  key={t.id}
-  task={t}
-  onNext={() => dispatch({ type: 'advance', id: t.id })}
-  onDelete={() => dispatch({ type: 'remove', id: t.id })}
-/>
-```
-
-- **Props:** `task`, `onNext` and `onDelete`, the three attributes that `TaskRowProps` lists.
-- **Children:** none. The tag closes itself, so `props.children` is `undefined`, and since
-  `TaskRowProps` has no `children` field, `<TaskRow ...>text</TaskRow>` would not even compile (P7,
-  the row "no `children` in the type").
-- **`key={t.id}` is not a prop.** It is not in `TaskRowProps`, and still there is no error, because
-  React's JSX types allow `key` on every component separately
-  (`interface IntrinsicAttributes extends React.Attributes {}`, `@types/react/index.d.ts:4259`).
-  React keeps the value for itself; case 6 shows the code that does it.
-
-`TaskRow` takes out `task` but not its fields: it uses `task.title` and `task.status`. A nested
-pattern, `{ task: { title, status }, onNext, onDelete }` (form 9), would also work. I think one level
-is better here: the row stays able to pass the whole task on, and the signature stays short.
-
-### Case 3: inline prop types in the Task Manager (forms 11 and 5)
-
-`starter/src/App.tsx`, lines 8 and 21:
-
-```tsx
-function AddForm({ dispatch }: { dispatch: Dispatch<Action> }) {
-function TaskList({ tasks, dispatch }: { tasks: Task[]; dispatch: Dispatch<Action> }) {
-```
-
-**Forms 11 and 5.** Without destructuring: `function TaskList(props: { ... })` and then
-`props.tasks` and `props.dispatch` in the body. The type is written inline after the pattern, so
-every name appears twice on one line. That is fine for one or two props; from three on, I would
-name the type, as `TaskRow` does with `TaskRowProps`.
-
-Two lines in `src/taskReducer.ts` look similar but are **spread, not destructuring**: line 18
-`[...tasks, { id: action.id, ... }]` and line 21 `{ ...t, status: NEXT[t.status] }`. The dots are on
-the right side and build a **new** array and object, which is how the reducer avoids changing the
-old state. Line 21 also uses the order rule from P4: `status` comes after `...t`, so it overwrites
-`t.status`.
-
-### Case 4: `Button` in shadcn/ui (forms 11, 7, 8 and spread)
-
-`apps/v4/registry/new-york-v4/ui/button.tsx`, lines 40 to 61 (the long class strings above it are
-left out):
-
-```tsx
-function Button({
-  className,
-  variant = "default",
-  size = "default",
-  asChild = false,
-  ...props
-}: React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean
-  }) {
-  const Comp = asChild ? Slot.Root : "button"
-
-  return (
-    <Comp
-      data-slot="button"
-      data-variant={variant}
-      data-size={size}
-      className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
-    />
-  )
-}
-```
-
-**Form 11 with defaults (form 7) and a rest (form 8)**, then a spread on line 58. This is P4 in a
-real library:
-
-- `variant`, `size` and `asChild` are for the component only. Taking them out keeps them out of
-  `props`, so they do not land on the DOM as unknown attributes (the "Leaky" case in P4).
-- `className` is taken out and **merged** with `cn(...)`, the "Merged" case in P4. Because it is no
-  longer inside `props`, the spread at the end cannot overwrite the merged value.
-- `{...props}` comes **last**, so for everything else the caller wins: `onClick`, `type`,
-  `disabled`, `aria-*`.
-- **Children:** `Button` never names `children`. In `<Button>Save</Button>` the text stays inside
-  `props` and reaches the element through the spread, exactly like `Lazy` in P4. That works because
-  children is only a prop (P2).
-- The type is `React.ComponentProps<"button">` plus the component's own options (P7).
-
-Without destructuring, the five names of the pattern become this:
-
-```tsx
-function Button(allProps: ButtonProps) {
-  const className = allProps.className
-  const variant = allProps.variant !== undefined ? allProps.variant : "default"
-  const size = allProps.size !== undefined ? allProps.size : "default"
-  const asChild = allProps.asChild !== undefined ? allProps.asChild : false
-  const props = { ...allProps }
-  delete props.className
-  delete props.variant
-  delete props.size
-  delete props.asChild
-```
-
-One detail from pitfall 2: the variant types from `VariantProps` also allow `null`, and the
-defaults `= "default"` do not apply to `null`.
-
-### Case 5: `DialogContent` and `Card` in shadcn/ui (children taken out or passed through)
-
-`apps/v4/registry/new-york-v4/ui/dialog.tsx`, lines 50 to 57, and where the parts go (lines 61 to 70):
-
-```tsx
-function DialogContent({
-  className,
-  children,
-  showCloseButton = true,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Content> & {
-  showCloseButton?: boolean
-}) {
-  ...
-      <DialogPrimitive.Content data-slot="dialog-content" className={cn("...", className)} {...props}>
-        {children}
-        {showCloseButton && (
-          <DialogPrimitive.Close ...>
-```
-
-**Forms 11, 5, 7 and 8.** Here the difference between props and children is visible:
-
-- **Props:** `showCloseButton` is a setting (a boolean with a default), `className` is merged, and
-  the rest goes to the inner element.
-- **Children:** the content of the dialog. `DialogContent` takes it out **on purpose**, because it
-  has to put its own close button **after** the content (line 69 and then line 70). If children
-  stayed inside `props`, the component could not decide where it goes.
-
-Compare `card.tsx`, line 4:
-
-```tsx
-function Card({ className, ...props }: React.ComponentProps<"div">) {
-```
-
-`Card` does not mention `children` at all. It has nothing to add around the content, so the children
-travel inside `props` and the spread on line 12 puts them into the `<div>`. Same library, two
-choices, and the reason is the one from P5: take children out when the component must control where
-they go.
-
-Without destructuring, `DialogContent` would start with `const children = allProps.children`, a
-`showCloseButton` line with the `!== undefined` test, and a copy of `allProps` with three `delete`s.
-
-### Case 6: how React removes `key` (form 8, written out)
-
-`node_modules/react/cjs/react-jsx-runtime.development.js`, lines 249 to 251 (inside the function
-that builds an element):
-
-```js
-if ("key" in config) {
-  maybeKey = {};
-  for (var propName in config)
-    "key" !== propName && (maybeKey[propName] = config[propName]);
-} else maybeKey = config;
-```
-
-This is **form 8 without destructuring**. `config` is the object of all the attributes written in
-JSX. When it contains `key`, React builds a new object with every property except `key`, and that new
-object becomes the props (the variable name `maybeKey` is reused for it). With destructuring the
-same lines would be:
-
-```js
-const { key, ...props } = config
-```
-
-That is the whole reason behind the warning in Logs 6: the component never sees `key`, because
-React takes it out before it calls the component. I also searched React's shipped CommonJS files
-for destructuring patterns (`const {`, `var [`) and found none; the build writes these things out
-by hand, like the loop above.
-
-### Case 7: the TypeScript compiler (form 5)
-
-`node_modules/typescript/lib/_tsc.js`, line 2768:
-
-```js
-function writeStackEvent(index, endTime, results) {
-  const { phase, name, args, time, separateBeginAndEnd } = eventStack[index];
-```
-
-**Form 5** on an array item. Without destructuring:
-
-```js
-const event = eventStack[index];
-const phase = event.phase;
-const name = event.name;
-const args = event.args;
-const time = event.time;
-const separateBeginAndEnd = event.separateBeginAndEnd;
-```
-
-All five values are used in the function, so one line replaces six. This file is compiled
-JavaScript. In TypeScript with this project's `tsconfig.json`, the same line would be a compile
-error, because `eventStack[index]` may be `undefined` (T3).
-
-### Case 8: where destructuring makes the code worse (`chart.tsx`)
-
-`apps/v4/registry/new-york-v4/ui/chart.tsx`, lines 118 to 145:
-
-```tsx
-function ChartTooltipContent({
-  active,
-  payload,
-  className,
-  indicator = "dot",
-  hideLabel = false,
-  hideIndicator = false,
-  label,
-  labelFormatter,
-  labelClassName,
-  formatter,
-  color,
-  nameKey,
-  labelKey,
-}: React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
-  React.ComponentProps<"div"> & {
-    hideLabel?: boolean
-    hideIndicator?: boolean
-    indicator?: "line" | "dot" | "dashed"
-    nameKey?: string
-    labelKey?: string
-  } & Omit<
-    RechartsPrimitive.DefaultTooltipContentProps<
-      TooltipValueType,
-      TooltipNameType
-    >,
-    "accessibilityLayer"
-  >) {
-```
-
-**Form 11 with defaults (form 7).** I think this one is worse than it needs to be, for three reasons:
-
-1. **The signature is 28 lines long** before the body starts. Thirteen names, three of them with
-   defaults, mixed in one list. To find out what `color` or `formatter` is, you have to read an
-   intersection of four types.
-2. **It drops props without telling anybody.** The type includes `React.ComponentProps<"div">`, so
-   the compiler accepts `id`, `style`, `onClick` and every other `<div>` attribute. But the pattern
-   has no rest (`...props`), and I found no spread in the body, so all of them are thrown away. The
-   type promises more than the component does. This is the opposite risk of `Button`: there, the rest
-   carries everything on; here, anything not named in the pattern disappears.
-3. **Every name is written twice**, once in the pattern and once in the type, but in different
-   places and in a different order.
-
-A refactoring: name the type, and take the values out in the body, grouped by what they are for:
-
-```tsx
-type ChartTooltipContentProps = Omit<
-  RechartsPrimitive.DefaultTooltipContentProps<TooltipValueType, TooltipNameType>,
-  "accessibilityLayer"
-> & {
-  active?: boolean
-  color?: string
-  className?: string
-  indicator?: "line" | "dot" | "dashed"
-  hideLabel?: boolean
-  hideIndicator?: boolean
-  nameKey?: string
-  labelKey?: string
-}
-
-function ChartTooltipContent(props: ChartTooltipContentProps) {
-  const { active, payload, label, labelFormatter, formatter, color } = props // from Recharts
-  const { indicator = "dot", hideLabel = false, hideIndicator = false } = props // display options
-  const { className, labelClassName, nameKey, labelKey } = props // styling and keys
-```
-
-This is a sketch: I did not compile it against Recharts, and I added `active` and `color` by hand
-because I could not check which of the four original types they come from. The point is the
-shape. The type now lists only what the component really uses, so passing `id` is a compile error instead
-of being silently ignored. If the `<div>` attributes are wanted, the other fix is to keep the type
-and add `...rest` to the pattern and `{...rest}` to the outer `<div>`.
-
-
-Bonus 3: Real code
-
-Destructuring in code that somebody else wrote, from three sources:
-
-- the **Task Manager starter** from Assignment 3 (`starter/src/`)
-- two **libraries in this project's `node_modules`**: React 19.3.1 and TypeScript 5.8.3. These are
-  the versions pinned in `package-lock.json`, so the line numbers are the same after `npm install`.
-- the open-source project **[shadcn/ui](https://github.com/shadcn-ui/ui)**, commit `45bbf9b`
-  (20 November 2026), folder `apps/v4/registry/new-york-v4/ui/`
-
-| # | File and line | Forms | My verdict |
-|---|---|---|---|
-| 1 | Task Manager `src/App.tsx:37` | 1 | good, the reason hooks return arrays |
-| 2 | Task Manager `src/TaskRow.tsx:5` | 11 + 5 | good, **React props case** |
-| 3 | Task Manager `src/App.tsx:8` and `:21` | 11 + 5 | fine, the type is written inline |
-| 4 | shadcn/ui `button.tsx:40-58` | 11 + 7 + 8, spread | good, a textbook rest/spread component |
-| 5 | shadcn/ui `dialog.tsx:50-69`, `card.tsx:4` | 11 + 8 | good, **children taken out or passed through** |
-| 6 | React `cjs/react-jsx-runtime.development.js:249-251` | 8, written out | the reason `key` is not a prop |
-| 7 | TypeScript `lib/_tsc.js:2768` | 5 | good |
-| 8 | shadcn/ui `chart.tsx:118-145` | 11 + 7 | **worse**, and it drops props silently |
+The repository has a `.gitignore` that leaves out `node_modules` and the LaTeX build files, and it
+runs after `git clone`, `npm install` and `npm run all`. The history shows the work in steps over
+several days (`git log --oneline`).
 
 ## Logs
 

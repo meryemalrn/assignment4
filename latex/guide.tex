@@ -23,7 +23,7 @@
 \definecolor{str}{HTML}{0A3069}
 \definecolor{com}{HTML}{6E7781}
 \definecolor{link}{HTML}{0550AE}
-\hypersetup{colorlinks=true,linkcolor=link,urlcolor=link,pdftitle={Destructuring Field Guide},pdfauthor={YOUR FULL NAME}}
+\hypersetup{colorlinks=true,linkcolor=link,urlcolor=link,pdftitle={Destructuring Field Guide},pdfauthor={Meryem Betül Abdulrahman}}
 
 \DeclareRobustCommand{\code}[1]{\texttt{#1}}
 \setlength{\parindent}{0pt}
@@ -74,19 +74,19 @@
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\small Destructuring Field Guide}
-\fancyhead[R]{\small YOUR FULL NAME}
+\fancyhead[R]{\small Meryem Betül Abdulrahman}
 \fancyfoot[C]{\small\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
 
 \title{Destructuring Field Guide}
-\author{YOUR FULL NAME\\ YOUR STUDENT NUMBER}
+\author{Meryem Betül Abdulrahman\\ 2300009906}
 \date{\today}
 
 \begin{document}
 \maketitle
 \thispagestyle{empty}
 
-Bonuses claimed: \textbf{Bonus 1: LaTeX} (\code{latex/\allowbreak{}guide.\allowbreak{}pdf}), \textbf{Bonus 2: Depth} (\code{js/\allowbreak{}depth.\allowbreak{}mjs}, \code{ts/\allowbreak{}depth.\allowbreak{}ts}), \textbf{Bonus 3: Real code}. Each one has its own section near the end.
+Bonuses claimed: \textbf{Bonus 1: LaTeX} (\code{latex/\allowbreak{}guide.\allowbreak{}pdf}), \textbf{Bonus 2: Depth} (\code{js/\allowbreak{}depth.\allowbreak{}mjs}, \code{ts/\allowbreak{}depth.\allowbreak{}ts}), \textbf{Bonus 3: Real code}, \textbf{Bonus 4: Git repository}. Each one has its own section near the end.
 
 \tableofcontents
 \newpage
@@ -236,7 +236,7 @@ let right = 'stripes'
 ;[left, right] = [right, left]
 console.log('form 3:', left, right)
 
-let gold = 'Ayla', silver = 'Bora', bronze = 'Cem'
+let gold = 'Sarı', silver = 'Gri', bronze = 'Kahve'
 ;[gold, silver, bronze] = [bronze, gold, silver]
 console.log('form 3 rotate:', gold, silver, bronze)
 \end{lstlisting}
@@ -245,7 +245,7 @@ console.log('form 3 rotate:', gold, silver, bronze)
 
 \begin{lstlisting}[style=plain]
 form 3: stripes dots
-form 3 rotate: Cem Ayla Bora
+form 3 rotate: Kahve Sarı Gri
 \end{lstlisting}
 
 \textbf{As plain assignments:}
@@ -437,7 +437,7 @@ const others = { name: student.name, city: student.city, year: student.year } //
 
 \begin{lstlisting}[language=JavaScript]
 const order = {
-  customer: { fullName: 'Ece Kaya', address: { city: 'Ankara' } },
+  customer: { fullName: 'Jensen Huang', address: { city: 'California' } },
   items: ['keyboard', 'mouse', 'monitor'],
 }
 const { customer: { fullName, address: { city } }, items: [firstItem, ...otherItems] } = order
@@ -456,7 +456,7 @@ console.log('form 9 safe:', carrier)
 \textbf{Output:}
 
 \begin{lstlisting}[style=plain]
-form 9: Ece Kaya Ankara keyboard [ 'mouse', 'monitor' ]
+form 9: Jensen Huang California keyboard [ 'mouse', 'monitor' ]
 form 9 no variable for the path: undefined undefined
 form 9 missing parent: Cannot read properties of undefined (reading 'carrier')
 form 9 safe: none
@@ -569,11 +569,11 @@ const stock = { apple: 12, pear: 0, cherry: 40 }
 for (const [fruit, count] of Object.entries(stock)) {
   console.log('form 12 object:', fruit, count)
 }
-const capitals = new Map([['TR', 'Ankara'], ['JP', 'Tokyo']])
+const capitals = new Map([['KR', 'Seoul'], ['JP', 'Tokyo']])
 for (const [country, capital] of capitals) {
   console.log('form 12 map:', country, capital)
 }
-for (const [index, name] of ['Ali', 'Veli'].entries()) {
+for (const [index, name] of ['Courtney', 'Kurt'].entries()) {
   console.log('form 12 array entries:', index, name)
 }
 for (const { nick, points: score = 0 } of players) {
@@ -587,10 +587,10 @@ for (const { nick, points: score = 0 } of players) {
 form 12 object: apple 12
 form 12 object: pear 0
 form 12 object: cherry 40
-form 12 map: TR Ankara
+form 12 map: KR Seoul
 form 12 map: JP Tokyo
-form 12 array entries: 0 Ali
-form 12 array entries: 1 Veli
+form 12 array entries: 0 Courtney
+form 12 array entries: 1 Kurt
 form 12 objects: mri 310
 form 12 objects: kaan 275
 \end{lstlisting}
@@ -1231,7 +1231,7 @@ xelatex guide.tex        # first run writes the contents
 xelatex guide.tex        # second run puts page numbers into the contents
 \end{lstlisting}
 
-\code{latexmk -\allowbreak{}xelatex guide.\allowbreak{}tex} does both runs in one command. Without a local TeX installation: upload \code{guide.\allowbreak{}tex} to Overleaf and choose \textbf{Menu > Compiler > XeLaTeX}.
+\code{latexmk -\allowbreak{}xelatex guide.\allowbreak{}tex} does both runs in one command. Without a local TeX installation: upload \code{guide.\allowbreak{}tex} to Overleaf, open \textbf{Settings} (the gear icon) and choose \textbf{Compiler: XeLaTeX} and \textbf{Main document: guide.tex}.
 
 \textbf{Why XeLaTeX and not pdfLaTeX:} the guide contains UTF-8 characters (Turkish letters, the emoji in D1). pdfLaTeX with \code{listings} cannot read multi-byte characters inside code; XeLaTeX reads UTF-8 natively and loads the OpenType Latin Modern fonts with \code{fontspec}. Latin Modern has no emoji glyph, so the generator writes \code{(\allowbreak{}thumbs-\allowbreak{}up)} instead of the emoji. (I first tried LuaLaTeX, see Logs 13.)
 
@@ -1702,6 +1702,12 @@ function ChartTooltipContent(props: ChartTooltipContentProps) {
 \end{lstlisting}
 
 This is a sketch: I did not compile it against Recharts, and I added \code{active} and \code{color} by hand because I could not check which of the four original types they come from. The point is the shape. The type now lists only what the component really uses, so passing \code{id} is a compile error instead of being silently ignored. If the \code{<\allowbreak{}div>\allowbreak{}} attributes are wanted, the other fix is to keep the type and add \code{.\allowbreak{}.\allowbreak{}.\allowbreak{}rest} to the pattern and \code{\{\allowbreak{}.\allowbreak{}.\allowbreak{}.\allowbreak{}rest\}} to the outer \code{<\allowbreak{}div>\allowbreak{}}.
+
+\section{\texorpdfstring{Bonus 4: Git repository}{Bonus 4: Git repository}}\label{bonus-4-git-repository}
+
+Bonus 4: Git repository, \url{https://github.com/KULLANICI-ADIN/assignment4}
+
+The repository has a \code{.\allowbreak{}gitignore} that leaves out \code{node\_modules} and the LaTeX build files, and it runs after \code{git clone}, \code{npm install} and \code{npm run all}. The history shows the work in steps over several days (\code{git log -\allowbreak{}-\allowbreak{}oneline}).
 
 \section{\texorpdfstring{Logs}{Logs}}\label{logs}
 
