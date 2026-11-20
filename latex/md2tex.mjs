@@ -1,4 +1,4 @@
-// Your Name, student number
+// Meryem Betül Abdulrahman, 2300009906
 // Bonus 1: turns README.md into latex/guide.tex, so the PDF always has the same content as the guide.
 // Run: npm run latex   (then: cd latex && xelatex guide.tex && xelatex guide.tex)
 // No packages needed. It understands the Markdown that README.md uses: headings, paragraphs,

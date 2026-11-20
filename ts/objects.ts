@@ -50,21 +50,19 @@ const order: Order = {
   items: ['keyboard', 'mouse', 'monitor'],
 }
 const { customer: { fullName, address: { city } }, items: [firstItem, ...otherItems] } = order
-// firstItem is `string | undefined` because items is an array, not a tuple.
-console.log('form 9:', fullName, city, firstItem ?? '(none)', otherItems) // form 9: Ece Kaya Ankara keyboard [ 'mouse', 'monitor' ]
+console.log('form 9:', fullName, city, firstItem ?? '(none)', otherItems)
 
-// Form 9: the optional parent needs `= {}`; without it this line does not compile.
+// Form 9:
 const { shipping: { carrier = 'none' } = {} } = order
-console.log('form 9 safe:', carrier) // form 9 safe: none
+console.log('form 9 safe:', carrier) 
 
 // Form 10: computed key. The key must be known to be a key of the object: `keyof`.
 type Scores = { math: number; physics: number; 'web-programming': number }
 const scores: Scores = { math: 85, physics: 72, 'web-programming': 95 }
 const wanted: keyof Scores = 'physics'
-const { [wanted]: wantedScore } = scores // number
+const { [wanted]: wantedScore } = scores 
 console.log('form 10:', wantedScore) // form 10: 72
 
-// Form 10 in a generic function: the type of the result follows the key.
 function pick<T, K extends keyof T>(source: T, key: K): T[K] {
   const { [key]: picked } = source
   return picked
