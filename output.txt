@@ -1,0 +1,258 @@
+
+> destructuring-guide@0.0.0 all
+> npm run js && npm run ts
+
+
+> destructuring-guide@0.0.0 js
+> node js/arrays.mjs && node js/objects.mjs && node js/params.mjs && node js/pitfalls.mjs && tsx js/props.jsx && node js/depth.mjs
+
+form 1: 2 9
+form 1 plain: 2 9
+form 1 missing: 10 20 undefined
+form 2: Mortimer [ 'Cassandra', 'Alexander' ]
+form 2 empty rest: Bella []
+form 2 rest is a copy: true 4
+form 2 rest vs spread: 3 4
+form 3: stripes dots
+form 3 rotate: Kahve Sarı Gri
+form 4: L black
+form 4 missing/undefined/null: default default null
+form 5: Buy milk todo
+form 5 let: Lenovo 32 undefined 16
+form 6: SEN0416 Game Programming
+form 6 old name: undefined
+form 7: Login fails normal null []
+form 7 rename+default: normal
+form 8: 42 { name: 'Deniz', city: 'Izmir', year: 3 }
+form 8 original untouched: 4
+form 8 spread: { name: 'Deniz', city: 'Izmir', year: 4 }
+form 9: Jensen Huang California keyboard [ 'mouse', 'monitor' ]
+form 9 no variable for the path: undefined undefined
+form 9 missing parent: Cannot read properties of undefined (reading 'carrier')
+form 9 safe: none
+form 10: 72
+form 10 expression: 95 95 0
+form 11: { title: 'Read', status: 'todo' }
+form 11 no argument: { title: undefined, status: 'todo' }
+form 11 undefined: { title: undefined, status: 'todo' }
+form 11 null: TypeError
+form 11 no "= {}": Cannot destructure property 'title' of 'undefined' as it is undefined.
+form 11b: 5 5
+form 11b callback: [ 'mri=310', 'kaan=275' ]
+form 12 object: apple 12
+form 12 object: pear 0
+form 12 object: cherry 40
+form 12 map: KR Seoul
+form 12 map: JP Tokyo
+form 12 array entries: 0 Courtney
+form 12 array entries: 1 Kurt
+form 12 objects: mri 310
+form 12 objects: kaan 275
+pitfall 1: TypeError
+pitfall 1 message: Cannot destructure property 'a' of 'undefined' as it is undefined.
+pitfall 1 array/null: null is not iterable
+pitfall 1 fixed: undefined
+pitfall 2: dark null 0 "" tr
+pitfall 2 fixed: 14
+pitfall 3: SyntaxError: Unexpected token '='
+pitfall 3 fixed: 30 20
+pitfall 4: [ 'Mri', 'Kaan', 'Zeynep' ] { name: 'Zeynep' }
+pitfall 4 primitive: AutoTrack Other
+pitfall 4 same object: true true
+pitfall 5 array: 255 128 0 | 0 128 255
+pitfall 5 object: 255 128 0
+pitfall 6: Mri 21 undefined undefined
+pitfall 7: ReferenceError: Cannot access 'second' before initialization
+P1 A: <section><h2>Hi</h2>text</section>
+P1 B: <section><h2>Hi</h2>text</section>
+P1 props object: { title: 'Hi', count: 3, children: 'text' }
+P1 keys: [ 'title', 'count', 'children' ]
+P1 spy renders: 
+P1 plain call: <section><h2>Hi</h2>text</section>
+P2 between tags: <section><h2>Hi</h2>text</section>
+P2 as attribute: <section><h2>Hi</h2>text</section>
+P2 both: <section><h2>Hi</h2>from between the tags</section>
+P3 string: <div>hello</div>
+P3 number: <div>42</div>
+P3 zero: <div>0</div>
+P3 one element: <div><b>bold</b></div>
+P3 several elements: <div><b>one</b><i>two</i></div>
+P3 nothing: <div></div>
+P3 undefined: <div></div>
+P3 null: <div></div>
+P3 false: <div></div>
+P3 true: <div></div>
+P3 empty string: <div></div>
+P3 array: <div>ab3</div>
+P3 function (not called): <div></div>
+P3 typeof string: <i>string</i>
+P3 typeof number: <i>number</i>
+P3 typeof one element: <i>object</i>
+P3 typeof several: <i>array(2)</i>
+P3 typeof nothing: <i>undefined</i>
+P3 typeof null: <i>null</i>
+P3 typeof false: <i>boolean</i>
+P3 typeof function: <i>function</i>
+P3 function (called): <ol><li>T-3</li><li>T-2</li><li>T-1</li></ol>
+P3 zero && trap: <div>0</div>
+P3 zero fixed: <div></div>
+P4 rest object: { id: 'stats', 'data-kind': 'panel', 'aria-label': 'Statistics' }
+P4 rest onto DOM: <section id="stats" data-kind="panel" aria-label="Statistics"><h2>Stats</h2>body</section>
+P4 spread first: <section class="panel">x</section>
+P4 spread last: <section class="mine">x</section>
+P4 plain objects: { className: 'panel' } { className: 'mine' }
+P4 merged: <section class="panel mine">x</section>
+P4 leaky: <section title="Stats" id="stats">body</section>
+P4 children through spread: <section id="lazy">passed through</section>
+P5 props: <div class="dialog"><header>Delete file?</header><main>This cannot be undone.</main><footer><button>OK</button></footer></div>
+P5 children: <div class="dialog"><header>Delete file?</header><main>This cannot be undone.</main><footer><button>OK</button></footer></div>
+P5 props, footer forgotten: <div class="dialog"><header>Delete file?</header><main>This cannot be undone.</main><footer></footer></div>
+P5 children, wrong order: <div class="dialog"><footer>OK</footer><header>Delete file?</header></div>
+P6 missing: <span class="gray">new</span>
+P6 undefined: <span class="gray">new</span>
+P6 null: <span></span>
+P6 empty string: <span class="gray"></span>
+P6 zero: <span class="gray">0</span>
+P6 children default: <p>Hello, stranger</p>
+P6 children given: <p>Hello, Mri</p>
+P6 children null: <p></p>
+P6 null with ??: <span>new</span>
+Hint key: <ul><li>undefined:first</li></ul>
+Hint rest + existing name: <section id="s" data-had-title="no">Stats</section>
+Hint mutate props: TypeError: Cannot assign to read only property 'title' of object '#<Object>'
+Hint mutate renders: <b>original</b>
+Hint reassign local: <b>ORIGINAL</b>
+D1 two variables from four values:
+D1   [Symbol.iterator]() called
+D1   next() -> {"value":"a","done":false}
+D1   next() -> {"value":"b","done":false}
+D1   return() called: the pattern stopped early
+D1 result: a b
+D1 with rest (runs to the end, no return()):
+D1   [Symbol.iterator]() called
+D1   next() -> {"value":"a","done":false}
+D1   next() -> {"value":"b","done":false}
+D1   next() -> {"done":true}
+D1 result: a [ 'b' ]
+D1 string: M r [ 'i', '!' ]
+D1 emoji: 👍 o | by index: false
+D1 Set: x y
+D1 Map: TR Ankara
+D1 infinite generator: 1 2 3
+D1 array-like: TypeError: {(intermediate value)(intermediate value)} is not iterable
+D1 object pattern on a string: 5 I r
+D1 object pattern on an array: b 3
+D1 object pattern on a number: function undefined
+D2   default for b computed
+D2 lazy: given B calls = 1
+D2 earlier variable: 3 6 18
+D2 later variable: ReferenceError: Cannot access 'second' before initialization
+D2 order: key p > read p > default p > key q > read q | values 0 1
+D2 fresh default per call: [ 'x' ] [ 'y' ]
+D2 right side first: 2 3
+D3 catch: SyntaxError - Expected property name or '}' in JSON at position 2 (line 1 column 3)
+D3 assignment targets: { x: 5, y: 7, speed: 1, label: 'AutoTrack' } [ 0, 0, 9 ]
+D3 for...of: a 1
+D3 for...of: b 2
+D3 for...in: 0 string
+D3 for...in: 1 string
+D3 for...in with a pattern: a b
+D3 for...in with a pattern: x y
+D3 dynamic import: function true
+D5 deep pattern: mri@example.com true 12
+D5 refactored: mri@example.com true 12
+D5 deep pattern on a missing level: Cannot read properties of undefined (reading 'theme')
+D5 optional chaining instead: default
+
+> destructuring-guide@0.0.0 ts
+> tsx ts/arrays.ts && tsx ts/objects.ts && tsx ts/params.ts && tsx ts/types.ts && tsx ts/props.tsx && tsx ts/depth.ts
+
+form 1: 2 9
+form 1 mixed tuple: DENIZ 94.0
+form 2: MORTIMER [ 'Cassandra', 'Alexander' ]
+form 2 tuple: 8 5 [ 'vip', 'new' ]
+form 3: stripes dots
+form 4: l BLACK
+form 4 null: null undefined
+form 5: Buy milk todo
+form 5 let: Lenovo 32 undefined 16
+form 6: SEN0416 Game Programming
+form 6 typed: SEN0416
+form 7: Login fails normal null []
+form 8: 42 { name: 'Deniz', city: 'Izmir', year: 3 }
+form 9: Jensen Huang California keyboard [ 'mouse', 'monitor' ]
+form 9 safe: none
+form 10: 72
+form 10 generic: 95 16
+form 10 record: 0
+form 11: { title: 'Read', status: 'todo' }
+form 11 no argument: q="" page=1 size=20
+form 11 some fields: q="" page=3 size=20
+form 11b: 5 5
+form 11b callback: [ 'mri=310', 'kaan=275' ]
+form 12 object: apple  12
+form 12 object: pear   0
+form 12 object: cherry 40
+form 12 keys are string: cpu true
+form 12 keys are string: memory true
+form 12 map: KR 5
+form 12 map: JP 5
+form 12 array entries: 1 Courtney
+form 12 array entries: 2 Kurt
+form 12 objects: mri 310
+form 12 objects: kaan 275
+T1: 1
+T1 confusion: 1 number
+T1 correct: 1 2
+T1 rename + type: 1 2
+T2 loose: Mri 21 string
+T2 tuple: MRI 22
+T2 as const return: MRI 22
+T2 as const literal: GET GET 200
+T2 frozen at run time? false
+T3 check: PEN
+T3 default: PEN
+T3 ?. and ??: NOTHING
+T3 tuple: PEN
+T3 rest: 1
+T4: localhost undefined 3000 6000 null
+T4 port: 160
+T4 widened: none
+T5 wrong name: undefined
+T5 fixed: mri@example.com
+P1 A: <section><h2>Hi</h2>text</section>
+P1 B: <section><h2>Hi</h2>text</section>
+P2 between tags: <section><h2>Hi</h2>text</section>
+P2 as attribute: <section><h2>Hi</h2>text</section>
+P3 string: <div>hello</div>
+P3 number: <div>42</div>
+P3 one element: <div><b>bold</b></div>
+P3 several elements: <div><b>one</b><i>two</i></div>
+P3 nothing: <div></div>
+P3 undefined: <div></div>
+P3 null: <div></div>
+P3 false: <div></div>
+P3 function (called): <ol><li>T-3</li><li>T-2</li><li>T-1</li></ol>
+P3 string only: <h1>FIELD GUIDE</h1>
+P4 rest onto DOM: <section id="stats" data-kind="panel" aria-label="Statistics"><h2>Stats</h2>body</section>
+P4 spread first: <section class="panel">x</section>
+P4 spread last: <section class="mine">x</section>
+P5 props: <div class="dialog"><header>Delete file?</header><main>This cannot be undone.</main><footer><button>OK</button></footer></div>
+P5 children: <div class="dialog"><header>Delete file?</header><main>This cannot be undone.</main><footer><button>OK</button></footer></div>
+P6 missing: <span class="gray">new</span>
+P6 undefined: <span class="gray">new</span>
+P6 null: <span class="gray"></span>
+P6 given: <span class="red">sale</span>
+P7a with children: <p class="info">Saved.</p>
+P7a without children: <p class="warn"></p>
+P7b PropsWithChildren: <p class="warn">Disk is almost full.</p>
+P7b without children: <p class="info"></p>
+P7c required: <strong>must be here</strong>
+P7d ComponentProps: <button type="submit" disabled="" aria-label="Save" class="btn btn-ghost">Save</button>
+P7d defaults: <button class="btn btn-primary">OK</button>
+P7 ComponentProps<typeof Alert>: <p class="info">typed as props of Alert</p>
+D4 First/Rest/Last checks: [ true, true, true, true ]
+D4 value twin: 1 [ 'Deniz', true ]
+D4 Unwrap: 1 1
+D4 Parameters: Write the guide true { title: 'Write the guide', status: 'todo', urgent: true }
+D4 omit: { id: 1, name: 'Deniz' } [ 'id', 'name' ]
