@@ -1800,7 +1800,7 @@ and add `...rest` to the pattern and `{...rest}` to the outer `<div>`.
 
 ## Bonus 4: Git repository
 
-Bonus 4: Git repository, https://github.com/KULLANICI-ADIN/assignment4
+Bonus 4: Git repository, https://github.com/meryemalrn/assignment4
 
 The repository has a `.gitignore` that leaves out `node_modules` and the LaTeX build files, and it
 runs after `git clone`, `npm install` and `npm run all`. The history shows the work in steps over
