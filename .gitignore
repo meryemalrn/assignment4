@@ -1,2 +1,6 @@
 node_modules
 dist
+latex/*.aux
+latex/*.log
+latex/*.toc
+latex/*.out
