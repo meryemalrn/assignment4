@@ -4,10 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "js": "node js/arrays.mjs && node js/objects.mjs && node js/params.mjs && node js/pitfalls.mjs && tsx js/props.jsx",
-    "ts": "tsx ts/arrays.ts && tsx ts/objects.ts && tsx ts/params.ts && tsx ts/types.ts && tsx ts/props.tsx",
+    "js": "node js/arrays.mjs && node js/objects.mjs && node js/params.mjs && node js/pitfalls.mjs && tsx js/props.jsx && node js/depth.mjs",
+    "ts": "tsx ts/arrays.ts && tsx ts/objects.ts && tsx ts/params.ts && tsx ts/types.ts && tsx ts/props.tsx && tsx ts/depth.ts",
     "check": "tsc --noEmit",
-    "all": "npm run js && npm run ts"
+    "all": "npm run js && npm run ts",
+    "latex": "node latex/md2tex.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
